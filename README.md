@@ -37,4 +37,3 @@ Pré-requisitos: Node.js (16+)
 
 ---
 
-Se quiser, eu continuo adicionando: formulários de CRUD completos, upload de imagens, testes automatizados e CI. Qual próximo passo deseja que eu implemente agora?
