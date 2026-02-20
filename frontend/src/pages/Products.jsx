@@ -88,12 +88,12 @@ export default function Products() {
         payload = new FormData()
         payload.append('name', form.name)
         payload.append('quantity', String(form.quantity))
-        payload.append('price', String(form.price))
+        payload.append('price', String(parseFloat(form.price).toFixed(2)))
         payload.append('category', form.category)
         payload.append('image', form.imageFile)
         config.headers['Content-Type'] = 'multipart/form-data'
       } else {
-        payload = { name: form.name, quantity: Number(form.quantity), price: Number(form.price), category: form.category, image: editing && editing.image ? editing.image : '' }
+        payload = { name: form.name, quantity: Number(form.quantity), price: parseFloat(form.price).toFixed(2), category: form.category, image: editing && editing.image ? editing.image : '' }
       }
 
       if (editing) {
@@ -117,6 +117,26 @@ export default function Products() {
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
       setError(err?.response?.data?.message || 'Erro ao salvar')
+    }
+  }
+
+  async function deleteProduct() {
+    if (!editing) return
+    if (!window.confirm('Tem certeza que deseja excluir este produto?')) return
+
+    setError('')
+    const token = localStorage.getItem('token')
+
+    try {
+      await axios.delete(`http://localhost:4000/api/products/${editing.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setSuccess('Produto excluído com sucesso.')
+      setModalOpen(false)
+      fetchList()
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Erro ao excluir')
     }
   }
 
@@ -196,7 +216,7 @@ export default function Products() {
             </div>
             <div>
               <label className="text-sm">Preço</label>
-              <input type="number" step="0.01" className="w-full mt-1 px-3 py-2 border rounded bg-gray-50 dark:bg-gray-700" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
+              <input type="text" inputMode="decimal" className="w-full mt-1 px-3 py-2 border rounded bg-gray-50 dark:bg-gray-700" placeholder="0.00" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value.replace(',', '.') }))} />
             </div>
           </div>
           <div>
@@ -210,9 +230,16 @@ export default function Products() {
             {form.imagePreview && <div className="mt-2"><img src={form.imagePreview} alt="preview" className="w-32 h-20 object-cover rounded" /></div>}
           </div>
 
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded">Cancelar</button>
-            <button className="px-4 py-2 bg-indigo-600 text-white rounded">Salvar</button>
+          <div className="flex justify-between gap-2">
+            <div>
+              {editing && (
+                <button type="button" onClick={deleteProduct} className="px-4 py-2 bg-red-600 text-white rounded">Excluir</button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded">Cancelar</button>
+              <button className="px-4 py-2 bg-indigo-600 text-white rounded">{editing ? 'Atualizar' : 'Adicionar'}</button>
+            </div>
           </div>
         </form>
       </Modal>
